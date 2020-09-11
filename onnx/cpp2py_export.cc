@@ -325,6 +325,12 @@ PYBIND11_MODULE(onnx_cpp2py_export, onnx_cpp2py_export) {
     proto.SerializeToString(&out);
     return py::bytes(out);
   }, "bytes"_a, "check_type"_a = false);
+
+  shape_inference.def(
+      "infer_shapes_path",
+      [](const std::string& path, bool check_type)  -> void {
+        shape_inference::InferShapes(path, check_type);
+      });
 }
 
 } // namespace ONNX_NAMESPACE

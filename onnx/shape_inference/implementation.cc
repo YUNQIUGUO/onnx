@@ -1,6 +1,7 @@
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/string_utils.h"
 #include "onnx/checker.h"
+#include <fstream>
 
 namespace ONNX_NAMESPACE {
 namespace shape_inference {
@@ -369,6 +370,38 @@ void InferShapes(
       check_type,
       schema_registry,
       m.ir_version());
+}
+
+void InferShapes(
+  const std::string& model_path,
+  const bool check_type,
+  const ISchemaRegistry* schema_registry
+  ) {
+  ModelProto model;
+  std::fstream model_stream(model_path, std::ios::in | std::ios::binary);
+  if (!model_stream.good()) {
+    fail_check(
+        "Unable to open model file:",
+        model_path,
+        ". Please check if it is a valid file.");
+  }
+  std::string data{std::istreambuf_iterator<char>{model_stream},
+                   std::istreambuf_iterator<char>{}};
+  if (!ParseProtoFromBytes(&model, data.c_str(), data.size())) {
+    fail_check(
+        "Unable to parse model from file:",
+        model_path,
+        ". Please check if it is a valid protobuf file of model.");
+  }
+  InferShapes(model, check_type, schema_registry);
+  // Save the inferred model to the original model path
+  // TODO catch fail status
+  std::fstream output(model_path, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!model.SerializeToOstream(&output)) {
+    fail_check(
+        "Unable to save inferred model to the original path:",
+        model_path);
+  }  
 }
 
 void InferShapeForFunctionNode(

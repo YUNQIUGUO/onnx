@@ -195,6 +195,12 @@ void InferShapes(
     const ISchemaRegistry* schema_registry = OpSchemaRegistry::Instance()
     );
 
+void InferShapes(
+    const std::string& model_path,
+    const bool check_type = false,
+    const ISchemaRegistry* schema_registry = OpSchemaRegistry::Instance()
+    );
+
 void InferShapeForFunctionNode(
     const FunctionProto* func,
     const ISchemaRegistry* schema_registry,

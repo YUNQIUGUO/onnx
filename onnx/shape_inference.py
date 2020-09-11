@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import onnx
 import onnx.onnx_cpp2py_export.shape_inference as C
 from onnx import ModelProto
+from six import string_types
 
 """Apply shape inference to the provided ModelProto.
 
@@ -28,9 +29,16 @@ Return:
 
 
 def infer_shapes(model, check_type=False):  # type: (ModelProto,bool) -> ModelProto
-    if not isinstance(model, ModelProto):
-        raise TypeError('Shape inference only accepts ModelProto, '
+    
+    if isinstance(model, ModelProto):
+        model_str = model.SerializeToString()
+        inferred_model_str = C.infer_shapes(model_str, check_type)
+        return onnx.load_from_string(inferred_model_str)
+    # If using model_path for infer_shapes
+    # directly save the inferred model into the original path, return nothing
+    elif isinstance(model, string_types):
+        C.infer_shapes_path(model, check_type)
+        return None
+    else:
+        raise TypeError('Shape inference only accepts ModelProto and String, '
                          'incorrect type: {}'.format(type(model)))
-    model_str = model.SerializeToString()
-    inferred_model_str = C.infer_shapes(model_str, check_type)
-    return onnx.load_from_string(inferred_model_str)
